@@ -3,163 +3,23 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>বায়তুল হিকমাহ</title>
-<link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@500;700&display=swap" rel="stylesheet">
+<title>বায়তুল হিকমাহ - Baytul Hikmah</title>
+<link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
 *{font-family:'Hind Siliguri',sans-serif;box-sizing:border-box}
-body{margin:0;background:#fdf8f0;padding:12px}
-.hd{background:#0f3d2e;color:#fff;padding:20px;border-radius:18px;text-align:center}
-.tabs{display:flex;gap:8px;margin:12px 0}
-.tb{flex:1;padding:12px;border:0;border-radius:12px;background:#ece2ce;font-weight:700;cursor:pointer}
-.tb.on{background:#0f3d2e;color:#fff}
-.card{background:#fff;padding:14px;border-radius:14px;margin-bottom:10px;border:1px solid #f0e6d3}
-input{width:100%;padding:12px;border:1px solid #ccc;border-radius:10px;font-size:16px}
-.btn{width:100%;padding:12px;border:0;border-radius:10px;background:#0f3d2e;color:#fff;font-weight:700;margin-top:10px;font-size:16px}
-.hide{display:none}
-.row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px dashed #ddd}
-.chk{width:28px;height:28px;border:2px solid #0f3d2e;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer}
-.chk.ok{background:#0f3d2e;color:#fff}
-</style>
-</head>
-<body>
-<div class="hd">
-<h2 style="margin:0">بَيْتُ الْحِكْمَةِ</h2>
-<h3 style="margin:4px 0 0">বায়তুল হিকমাহ</h3>
-<small>আমার ব্যক্তিগত লাইব্রেরি</small>
-</div>
-
-<div class="tabs">
-<button class="tb on" id="t1">প্রকাশনী</button>
-<button class="tb" id="t2">আমার সংগ্রহ</button>
-<button class="tb" id="t3">তুলনা</button>
-</div>
-
-<div id="v1">
-  <div class="card">
-    <b>নতুন প্রকাশনী যোগ করুন</b>
-    <input id="pubName" placeholder="যেমন: মাকতাবাতুল আযহার">
-    <button class="btn" id="addPubBtn">+ প্রকাশনী যোগ করুন</button>
-  </div>
-  <div id="pubList"></div>
-</div>
-
-<div id="v2" class="hide">
-  <div id="myStat" class="card"></div>
-  <div id="myList"></div>
-</div>
-
-<div id="v3" class="hide">
-  <div class="card">
-    <b>কোন বই নেই?</b>
-    <select id="compSel" style="width:100%;padding:12px;border-radius:10px;margin-top:8px"></select>
-    <div id="compRes" style="margin-top:10px"></div>
-  </div>
-</div>
-
-<div id="v4" class="hide">
-  <div class="card">
-    <button class="btn" id="backBtn" style="background:#fff;color:#0f3d2e;border:1.5px solid">← ফিরে যান</button>
-    <h2 id="dName" style="margin-top:12px"></h2>
-    <input id="bookName" placeholder="বইয়ের নাম" style="margin-top:10px">
-    <button class="btn" id="addBookBtn">+ বই যোগ করুন</button>
-    <div id="dBooks" style="margin-top:12px"></div>
-  </div>
-</div>
-
-<script>
-const DB_KEY = 'BAYTUL_HIKMAH_FINAL_FIX';
-let DB = JSON.parse(localStorage.getItem(DB_KEY) || '{"ps":[]}');
-let curId = null;
-const save = () => localStorage.setItem(DB_KEY, JSON.stringify(DB));
-
-function renderPubs(){
-  const list = document.getElementById('pubList');
-  const sel = document.getElementById('compSel');
-  list.innerHTML = '';
-  sel.innerHTML = '<option value="">প্রকাশনী বাছাই করুন</option>';
-  if(DB.ps.length===0){ list.innerHTML='<p style="text-align:center;color:#888;padding:20px">এখনো কোনো প্রকাশনী নেই</p>'; }
-  DB.ps.forEach(p=>{
-    const have = p.bs.filter(b=>b.o).length;
-    const div = document.createElement('div');
-    div.className='card';
-    div.style.cssText='display:flex;justify-content:space-between;cursor:pointer';
-    div.innerHTML=`<div><b>${p.n}</b><br><small>${have}/${p.bs.length} আছে</small></div><span>${p.bs.length} টি</span>`;
-    div.onclick=()=>openPub(p.id);
-    list.appendChild(div);
-    const opt=document.createElement('option');
-    opt.value=p.id; opt.textContent=p.n;
-    sel.appendChild(opt);
-  });
-}
-
-function openPub(id){
-  curId=id;
-  document.getElementById('dName').textContent=DB.ps.find(x=>x.id==id).n;
-  showView('v4');
-  renderDetail();
-}
-
-function renderDetail(){
-  const p=DB.ps.find(x=>x.id==curId);
-  if(!p) return;
-  const box=document.getElementById('dBooks');
-  box.innerHTML='';
-  if(p.bs.length===0) box.innerHTML='<small>কোনো বই নেই</small>';
-  p.bs.forEach(b=>{
-    const row=document.createElement('div');
-    row.className='row';
-    row.innerHTML=`<span>${b.n} ${b.o?'✅':''}</span><div style="display:flex;gap:10px"><div class="chk ${b.o?'ok':''}">${b.o?'✓':''}</div><span style="cursor:pointer">🗑️</span></div>`;
-    const chk=row.querySelector('.chk');
-    chk.onclick=()=>{ b.o=!b.o; save(); renderDetail(); renderPubs(); };
-    const del=row.querySelector('span:last-child');
-    del.onclick=()=>{ p.bs=p.bs.filter(y=>y.id!=b.id); save(); renderDetail(); renderPubs(); };
-    box.appendChild(row);
-  });
-}
-
-function showView(id){
-  ['v1','v2','v3','v4'].forEach(v=>document.getElementById(v).classList.add('hide'));
-  document.getElementById(id).classList.remove('hide');
-  document.querySelectorAll('.tb').forEach(b=>b.classList.remove('on'));
-  if(id==='v1') document.getElementById('t1').classList.add('on');
-  if(id==='v2') document.getElementById('t2').classList.add('on');
-  if(id==='v3') document.getElementById('t3').classList.add('on');
-}
-
-document.getElementById('addPubBtn').addEventListener('click', ()=>{
-  const inp=document.getElementById('pubName');
-  const v=inp.value.trim();
-  if(!v){ alert('নাম লিখুন'); return; }
-  DB.ps.push({id:Date.now(), n:v, bs:[]});
-  inp.value=''; save(); renderPubs();
-});
-
-document.getElementById('addBookBtn').addEventListener('click', ()=>{
-  const inp=document.getElementById('bookName');
-  const v=inp.value.trim();
-  if(!v) return;
-  DB.ps.find(x=>x.id==curId).bs.push({id:Date.now(), n:v, o:false});
-  inp.value=''; save(); renderDetail(); renderPubs();
-});
-
-document.getElementById('t1').addEventListener('click', ()=>{ showView('v1'); renderPubs(); });
-document.getElementById('t2').addEventListener('click', ()=>{
-  showView('v2');
-  let all=[]; DB.ps.forEach(p=>p.bs.forEach(b=>{ if(b.o) all.push(b); }));
-  document.getElementById('myStat').innerHTML=`<h3>মোট সংগ্রহ: ${all.length} টি</h3>`;
-  document.getElementById('myList').innerHTML=all.map(b=>`<div class="card">${b.n}</div>`).join('')||'<p style="text-align:center;color:#888">কোনো বইতে টিক দেননি</p>';
-});
-document.getElementById('t3').addEventListener('click', ()=>showView('v3'));
-document.getElementById('backBtn').addEventListener('click', ()=>{ showView('v1'); renderPubs(); });
-document.getElementById('compSel').addEventListener('change', (e)=>{
-  const id=Number(e.target.value);
-  const p=DB.ps.find(x=>x.id==id);
-  if(!p) return;
-  const have=p.bs.filter(b=>b.o), not=p.bs.filter(b=>!b.o);
-  document.getElementById('compRes').innerHTML=`<div class="card"><b>✅ আছে:</b> ${have.map(b=>b.n).join(', ')||'নেই'}</div><div class="card"><b>❌ নেই:</b> ${not.map(b=>b.n).join(', ')||'সব আছে'}</div>`;
-});
-
-renderPubs();
-</script>
-</body>
-</html>
+body{margin:0;background:#f5f1e8;padding:0}
+.main{max-width:480px;margin:0 auto;background:#fdfbf5;min-height:100vh;padding:12px}
+.header{background:linear-gradient(135deg,#0f3d2e 0%,#1a5c45 100%);color:#fff;padding:26px 20px;border-radius:24px;text-align:center;box-shadow:0 8px 20px rgba(15,61,46,.3)}
+.header h1{margin:0;font-size:26px;letter-spacing:1px}
+.header h2{margin:6px 0 0;font-weight:600}
+.header small{opacity:.9;letter-spacing:.5px}
+.tabs{display:flex;gap:8px;margin:16px 0;background:#fff;padding:6px;border-radius:16px;box-shadow:0 2px 10px rgba(0,0,0,.06)}
+.tb{flex:1;padding:11px;border:0;border-radius:12px;background:transparent;font-weight:700;cursor:pointer;color:#666;transition:.2s}
+.tb.on{background:#0f3d2e;color:#fff;box-shadow:0 4px 10px rgba(15,61,46,.25)}
+.card{background:#fff;padding:16px;border-radius:18px;margin-bottom:12px;border:1px solid #f0e6d3;box-shadow:0 4px 12px rgba(0,0,0,.04)}
+.card-title{font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.input{width:100%;padding:13px 14px;border:1.5px solid #e8e0d0;border-radius:12px;font-size:16px;outline:none;transition:.2s}
+.input:focus{border-color:#0f3d2e;background:#fffdf6}
+.btn{width:100%;padding:13px;border:0;border-radius:12px;background:#0f3d2e;color:#fff;font-weight:700;font-size:16px;margin-top:10px;cursor:pointer;box-shadow:0 4px 12px rgba(15,61,46,.2)}
+.btn:active{transform:scale(.98)}
+.btn-del{background:#fff;color:#d93025;border:1.5px solid #ffdad6;border-radius:10px;padding:6px 12px;cursor:pointer;font-size:13px;font
