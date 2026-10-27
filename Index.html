@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>বায়তুল হিকমাহ - আমার লাইব্রেরি</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&display=swap');
+*{font-family:'Hind Siliguri',sans-serif;box-sizing:border-box;margin:0;padding:0}
+body{background:#fdf8f0;color:#2c2c2c;padding:15px}
+.header{background:#0f3d2e;color:#fff;padding:22px;border-radius:18px;text-align:center;margin-bottom:20px}
+.header h1{font-size:26px;line-height:1.3}
+.tabs{display:flex;gap:8px;margin-bottom:15px;position:sticky;top:10px;z-index:10}
+.tab{flex:1;padding:12px;border-radius:12px;border:none;background:#e8e0d3;font-weight:700;cursor:pointer}
+.tab.active{background:#0f3d2e;color:#fff}
+.card{background:#fff;border-radius:16px;padding:16px;box-shadow:0 4px 12px rgba(0,0,0,.06);margin-bottom:12px;border:1px solid #f0e6d3}
+input{width:100%;padding:12px;border-radius:10px;border:1px solid #ddd;margin-top:8px;font-size:15px}
+button.btn{width:100%;padding:12px;border:none;border-radius:10px;background:#0f3d2e;color:#fff;font-weight:700;margin-top:10px;cursor:pointer}
+button.btn2{background:#fff;color:#0f3d2e;border:1.5px solid #0f3d2e}
+.small{font-size:13px;color:#666}
+.publisher-item{display:flex;justify-content:space-between;align-items:center;padding:14px;background:#fff;border-radius:12px;margin-top:10px;cursor:pointer;border:1px solid #eee}
+.badge{background:#0f3d2e;color:#fff;padding:3px 10px;border-radius:20px;font-size:12px}
+.book-row{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px dashed #eee}
+.check{width:24px;height:24px;border-radius:6px;border:2px solid #0f3d2e;display:flex;align-items:center;justify-content:center;cursor:pointer;font-weight:700}
+.check.done{background:#0f3d2e;color:#fff}
+.hidden{display:none}
+.progress{height:8px;background:#eee;border-radius:10px;overflow:hidden;margin-top:8px}
+.progress-bar{height:100%;background:#0f3d2e}
+</style>
+</head>
+<body>
+<div class="header">
+<h1>بَيْتُ الْحِكْمَةِ</h1>
+<h1>বায়তুল হিকমাহ</h1>
+<p style="opacity:.85;font-size:14px;margin-top:4px">আমার ব্যক্তিগত লাইব্রেরি</p>
+</div>
+
+<div class="tabs">
+<button class="tab active" id="t1" onclick="switchTab('publishers')">প্রকাশনী</button>
+<button class="tab" id="t2" onclick="switchTab('my')">আমার সংগ্রহ</button>
+<button class="tab" id="t3" onclick="switchTab('compare')">তুলনা</button>
+</div>
+
+<div id="tab-publishers" class="tab-content">
+<div class="card">
+<h3>নতুন প্রকাশনী যোগ করুন</h3>
+<p class="small">এটা আলাদা অপশন, এখানে তুমি তোমার মতো প্রকাশনী এড করবে</p>
+<input id="pubName" placeholder="প্রকাশনীর নাম, যেমন: মাকতাবাতুল আযহার">
+<button class="btn" onclick="addPublisher()">+ প্রকাশনী যোগ করুন</button>
+</div>
+<div id="publisherList"></div>
+</div>
+
+<div id="tab-my" class="tab-content hidden">
+<div class="card" id="myStats"></div>
+<div id="myBookList"></div>
+</div>
+
+<div id="tab-compare" class="tab-content hidden">
+<div class="card">
+<h3>কি কি বই নেই?</h3>
+<select id="compareSelect" onchange="renderCompare()" style="width:100%;padding:12px;border-radius:10px;border:1px solid #ddd;margin-top:10px"></select>
+<div id="compareResult" style="margin-top:15px"></div>
+</div>
+</div>
+
+<div id="pubDetail" class="tab-content hidden">
+<div class="card">
+<button class="btn btn2" onclick="backToPublishers()">← সব প্রকাশনী</button>
+<h2 id="detailName" style="margin-top:14px"></h2>
+<p id="detailStats" class="small"></p>
+<div class="progress"><div id="detailProgress" class="progress-bar"></div></div>
+<div style="margin-top:18px;border-top:1px solid #eee;padding-top:14px">
+<h4>এই প্রকাশনীতে নতুন বই যোগ করুন</h4>
+<input id="bookName" placeholder="বইয়ের নাম">
+<input id="authorName" placeholder="লেখক (ঐচ্ছিক)">
+<button class="btn" onclick="addBook()">+ বই যোগ করুন</button>
+</div>
+<div id="detailBooks" style="margin-top:15px"></div>
+</div>
+</div>
+
+<script>
+let data = JSON.parse(localStorage.getItem('hikmah_final') || '{"publishers":[]}');
+let currentPubId = null;
+function save(){localStorage.setItem('hikmah_final', JSON.stringify(data));}
+function addPublisher(){
+ let name=document.getElementById('pubName').value.trim();
+ if(!name) return alert('নাম লিখুন');
+ data.publishers.push({id:Date.now(), name:name, books:[]});
+ document.getElementById('pubName').value='';
+ save(); renderPublishers();
+}
+function renderPublishers(){
+ let list=document.getElementById('publisherList');
+ let sel=document.getElementById('compareSelect');
+ list.innerHTML=''; sel.innerHTML='<option value="">প্রকাশনী সিলেক্ট করুন</option>';
+ data.publishers.forEach(pub=>{
+   let have=pub.books.filter(b=>b.owned).length;
+   let total=pub.books.length;
+   list.innerHTML+=`<div class="publisher-item" onclick="openPublisher(${pub.id})"><div><b>${pub.name}</b><div class="small">${have} / ${total} টি আছে</div></div><span class="badge">${total} বই</span></div>`;
+   sel.innerHTML+=`<option value="${pub.id}">${pub.name}</option>`;
+ });
+ if(!data.publishers.length) list.innerHTML='<p class="small" style="text-align:center;padding:20px">এখনো কোনো প্রকাশনী যোগ করোনি। উপরে থেকে যোগ করো।</p>';
+}
+function openPublisher(id){
+ currentPubId=id;
+ let pub=data.publishers.find(p=>p.id==id);
+ document.getElementById('detailName').innerText=pub.name;
+ document.getElementById('tab-publishers').classList.add('hidden');
+ document.getElementById('tab-my').classList.add('hidden');
+ document.getElementById('tab-compare').classList.add('hidden');
+ document.getElementById('pubDetail').classList.remove('hidden');
+ renderPubDetail();
+}
+function backToPublishers(){
+ document.getElementById('pubDetail').classList.add('hidden');
+ document.getElementById('tab-publishers').classList.remove('hidden');
+ document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+ document.getElementById('t1').classList.add('active');
+ renderPublishers();
+}
+function addBook(){
+ let name=document.getElementById('bookName').value.trim();
+ let author=document.getElementById('authorName').value.trim();
+ if(!name) return;
+ let pub=data.publishers.find(p=>p.id==currentPubId);
+ pub.books.push({id:Date.now(), name:name, author:author, owned:false});
+ document.getElementById('bookName').value=''; document.getElementById('authorName').value='';
+ save(); renderPubDetail(); renderPublishers();
+}
+function toggleOwned(bid){
+ let pub=data.publishers.find(p=>p.id==currentPubId);
+ let b=pub.books.find(x=>x.id==bid); b.owned=!b.owned;
+ save(); renderPubDetail();
+}
+function deleteBook(bid){
+ if(!confirm('ডিলিট করবে?')) return;
+ let pub=data.publishers.find(p=>p.id==currentPubId);
+ pub.books=pub.books.filter(x=>x.id!=bid);
+ save(); renderPubDetail(); renderPublishers();
+}
+function renderPubDetail(){
+ let pub=data.publishers.find(p=>p.id==currentPubId);
+ let have=pub.books.filter(b=>b.owned).length;
+ let total=pub.books.length;
+ document.getElementById('detailStats').innerText=`মোট: ${total} | আছে: ${have} | নেই: ${total-have}`;
+ document.getElementById('detailProgress').style.width=(total?Math.round(have/total*100):0)+'%';
+ let h='';
+ pub.books.forEach(b=>{
+  h+=`<div class="book-row"><div><b>${b.name}</b><div class="small">${b.author||''}</div></div><div style="display:flex;gap:10px;align-items:center"><div class="check ${b.owned?'done':''}" onclick="toggleOwned(${b.id})">${b.owned?'✓':''}</div><span onclick="deleteBook(${b.id})" style="cursor:pointer">🗑️</span></div></div>`;
+ });
+ document.getElementById('detailBooks').innerHTML=h||'<p
