@@ -4,19 +4,20 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>বায়তুল হিকমাহ</title>
-<link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
 *{font-family:'Hind Siliguri',sans-serif;box-sizing:border-box}
-body{margin:0;background:#fcf6ec;padding:14px;color:#222}
-.top{background:#0f3d2e;color:#fff;padding:22px;border-radius:20px;text-align:center}
-.tabs{display:flex;gap:8px;margin:14px 0}
-.tab{flex:1;padding:12px;border-radius:12px;border:0;background:#ece2ce;font-weight:700;cursor:pointer}
-.tab.on{background:#0f3d2e;color:#fff}
-.card{background:#fff;padding:14px;border-radius:14px;margin-bottom:10px;border:1px solid #f0e6d3}
+body{margin:0;background:#fdf8f0;padding:12px;color:#222}
+.header{background:#0f3d2e;color:#fff;padding:20px;border-radius:18px;text-align:center}
+.tabs{display:flex;gap:8px;margin:14px 0;position:sticky;top:10px;z-index:10}
+.tab{flex:1;padding:12px;border:0;border-radius:12px;background:#ece2ce;font-weight:700;cursor:pointer}
+.tab.active{background:#0f3d2e;color:#fff}
+.card{background:#fff;padding:14px;border-radius:14px;margin-bottom:10px;border:1px solid #f0e6d3;box-shadow:0 2px 8px rgba(0,0,0,.05)}
 input,select{width:100%;padding:12px;border:1px solid #ddd;border-radius:10px;margin-top:8px;font-size:15px}
 .btn{width:100%;padding:12px;border:0;border-radius:10px;background:#0f3d2e;color:#fff;font-weight:700;margin-top:10px;cursor:pointer}
-.row{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px dashed #eee}
-.chk{width:26px;height:26px;border:2px solid #0f3d2e;border-radius:7px;display:grid;place-items:center;cursor:pointer;font-weight:700}
+.btn-light{background:#fff;color:#0f3d2e;border:1.5px solid #0f3d2e}
+.row{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px dashed #eee}
+.chk{width:26px;height:26px;border:2px solid #0f3d2e;border-radius:7px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-weight:700}
 .chk.ok{background:#0f3d2e;color:#fff}
 .hide{display:none}
 .small{color:#666;font-size:13px}
@@ -24,65 +25,83 @@ input,select{width:100%;padding:12px;border:1px solid #ddd;border-radius:10px;ma
 </head>
 <body>
 
-<div class="top">
+<div class="header">
 <h1 style="margin:0">بَيْتُ الْحِكْمَةِ</h1>
-<h2 style="margin:2px 0">বায়তুল হিকমাহ</h2>
-<small style="opacity:.8">তোমার ব্যক্তিগত লাইব্রেরি</small>
+<h2 style="margin:4px 0 0 0">বায়তুল হিকমাহ</h2>
+<small>আমার ব্যক্তিগত লাইব্রেরি</small>
 </div>
 
 <div class="tabs">
-<button class="tab on" id="b1" onclick="go('p')">প্রকাশনী</button>
-<button class="tab" id="b2" onclick="go('m')">আমার সংগ্রহ</button>
-<button class="tab" id="b3" onclick="go('c')">তুলনা</button>
+<button class="tab active" id="tabBtn1" onclick="switchTab('publishers')">প্রকাশনী</button>
+<button class="tab" id="tabBtn2" onclick="switchTab('my')">আমার সংগ্রহ</button>
+<button class="tab" id="tabBtn3" onclick="switchTab('compare')">তুলনা</button>
 </div>
 
-<!-- প্রকাশনী -->
-<div id="p">
+<!-- ১. প্রকাশনী ট্যাব -->
+<div id="view-publishers">
   <div class="card">
-    <b>নতুন প্রকাশনী যোগ করো</b>
-    <div class="small">এখানেই তুমি তোমার মতো প্রকাশনী এড করবা</div>
-    <input id="pn" placeholder="যেমন: মাকতাবাতুল আযহার">
-    <button class="btn" onclick="addP()">+ প্রকাশনী যোগ করুন</button>
+    <b>নতুন প্রকাশনী যোগ করুন</b>
+    <p class="small">এটা আলাদা অপশন, তুমি তোমার মতো এড করবে</p>
+    <input id="inputPub" placeholder="যেমন: মাকতাবাতুল আযহার, দারুল হিকমাহ">
+    <button class="btn" onclick="addPublisher()">+ প্রকাশনী যোগ করুন</button>
   </div>
-  <div id="pList"></div>
+  <div id="listPublishers"></div>
 </div>
 
-<!-- আমার সংগ্রহ -->
-<div id="m" class="hide">
-  <div id="mStat" class="card"></div>
-  <div id="mList"></div>
+<!-- ২. আমার সংগ্রহ -->
+<div id="view-my" class="hide">
+  <div id="myStats" class="card"></div>
+  <div id="myList"></div>
 </div>
 
-<!-- তুলনা -->
-<div id="c" class="hide">
+<!-- ৩. তুলনা -->
+<div id="view-compare" class="hide">
   <div class="card">
-    <b>কোন বইগুলো নেই?</b>
-    <select id="cSel" onchange="doC()"></select>
-    <div id="cRes" style="margin-top:12px"></div>
+    <b>কি কি বই নেই?</b>
+    <select id="selectCompare" onchange="renderCompare()"></select>
+    <div id="resultCompare" style="margin-top:12px"></div>
   </div>
 </div>
 
-<!-- প্রকাশনী ডিটেইল -->
-<div id="d" class="hide">
+<!-- ৪. প্রকাশনীর ভিতর -->
+<div id="view-detail" class="hide">
   <div class="card">
-    <button class="btn" style="background:#fff;color:#0f3d2e;border:1.5px solid" onclick="go('p')">← পিছনে</button>
-    <h2 id="dName" style="margin-top:12px"></h2>
-    <p id="dInfo" class="small"></p>
-    <div style="margin-top:14px;border-top:1px solid #eee;padding-top:12px">
-      <b>এই প্রকাশনীতে বই যোগ করো</b>
-      <input id="bn" placeholder="বইয়ের নাম">
-      <input id="an" placeholder="লেখকের নাম (ঐচ্ছিক)">
-      <button class="btn" onclick="addB()">+ বই যোগ করুন</button>
+    <button class="btn btn-light" onclick="switchTab('publishers')">← সব প্রকাশনীতে ফিরে যান</button>
+    <h2 id="detailName" style="margin-top:12px"></h2>
+    <p id="detailInfo" class="small"></p>
+    <div style="margin-top:15px;border-top:1px solid #eee;padding-top:12px">
+      <b>এই প্রকাশনীতে বই যোগ করুন</b>
+      <input id="inputBook" placeholder="বইয়ের নাম">
+      <input id="inputAuthor" placeholder="লেখকের নাম (ঐচ্ছিক)">
+      <button class="btn" onclick="addBook()">+ বই যোগ করুন</button>
     </div>
-    <div id="dBooks" style="margin-top:12px"></div>
+    <div id="detailBooks" style="margin-top:12px"></div>
   </div>
 </div>
 
 <script>
-let D=JSON.parse(localStorage.getItem('B_HIKMAH_FINAL')||'{"ps":[]}');
-let cur=null;
-const save=()=>localStorage.setItem('B_HIKMAH_FINAL',JSON.stringify(D));
+let DB = JSON.parse(localStorage.getItem('BAYTUL_HIKMAH_V3') || '{"publishers":[]}');
+let currentId = null;
 
-function addP(){
-  let v=document.getElementById('pn').value.trim();
-  if(!v) return alert('নাম লিখ');
+function save(){ localStorage.setItem('BAYTUL_HIKMAH_V3', JSON.stringify(DB)); }
+
+function addPublisher(){
+  let el = document.getElementById('inputPub');
+  let name = el.value.trim();
+  if(!name){ alert('প্রকাশনীর নাম লিখুন'); return; }
+  DB.publishers.push({id:Date.now(), name:name, books:[]});
+  el.value = '';
+  save(); renderPublishers();
+}
+
+function renderPublishers(){
+  let list = document.getElementById('listPublishers');
+  let sel = document.getElementById('selectCompare');
+  list.innerHTML = '';
+  sel.innerHTML = '<option value="">-- প্রকাশনী বাছাই করুন --</option>';
+  if(DB.publishers.length === 0){
+    list.innerHTML = '<p class="small" style="text-align:center;padding:20px">এখনো কোনো প্রকাশনী যোগ করোনি। উপরে থেকে যোগ করো।</p>';
+  }
+  DB.publishers.forEach(pub=>{
+    let have = pub.books.filter(b=>b.owned).length;
+    list.innerHTML += `<div class="card" style="display:flex;justify-content:space-between;align-items:center;cursor:pointer" onclick="openPublisher(${pub.id})"><div><b>${pub.name}</b><br><span class="small">${have} / ${pub.books.length} টি আছে</span></div><div><span style="background:#0f3d2e;color:#fff;padding:4
